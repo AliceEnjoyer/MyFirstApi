@@ -2,7 +2,10 @@ module github.com/AliceEnjoyer/MyFirstApi
 
 go 1.18
 
-require github.com/ilyakaznacheev/cleanenv v1.5.0
+require (
+	github.com/ilyakaznacheev/cleanenv v1.5.0
+	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
+)
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect

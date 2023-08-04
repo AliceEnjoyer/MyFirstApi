@@ -13,8 +13,11 @@ import (
 например парсинг конфиа (в этом файле)
 */
 
-/* 7) создаем структуру конфига первым делом и он будет полностю
-соответствовать yaml файлу, который сделаный пару шахов назад*/
+/*
+ 7. создаем структуру конфига первым делом и он будет полностю
+
+соответствовать yaml файлу, который сделаный пару шахов назад
+*/
 type Config struct {
 	/* Тэг yaml определяет какое имя будет у соответствующего параметра в yaml файле.
 	env-default - значение по умолчанию, если в конфиге значение этого параметра отсутствует,
@@ -29,14 +32,17 @@ type Config struct {
 
 /* 8) */
 type HTTPServer struct {
-	Address     string        `yaml"address" env-required: "true"`
+	Address     string        `yaml"address" env-default"localhost:8080"`
 	Timeout     time.Duration `yaml"timeout" env-required: "true"` // можно env-default"10s"
 	IdleTimeout time.Duration `yaml"idle_timeout" env-required: "true"`
 }
 
-/* 9) теперь нам нужно написать функцию, которая
+/*
+ 9. теперь нам нужно написать функцию, которая
+
 прочитает файл с конфигом и создаст и дополнит объект конфиг,
-который был только что написан.*/
+который был только что написан.
+*/
 func MustLoad(configPath string) Config {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("config file %s does not exist", configPath)

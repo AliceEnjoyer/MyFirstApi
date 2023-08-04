@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"golang.org/x/exp/slog" // это просто обертка текстовых и json логгеров
 )
 
 /*
@@ -29,7 +30,16 @@ rest api - это не более чем архитектурный подход
 
 */
 
+// 11) сделаем текстовые константы что бы в дальнейшем можно было удобно
+// менять значение env
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
+)
+
 func main() {
+	// читаем конфиг (2 - 9)
 	ConfigPath := flag.String(
 		"ConfigPath",
 		"",
@@ -44,5 +54,50 @@ func main() {
 
 	cnfg := config.MustLoad(*ConfigPath)
 
-	fmt.Println(cnfg.HTTPServer.Address)
+	// инициализируем логгер (10 - 11)
+	log := setupLogger(cnfg.Env)
+	log.Info("starting url-shortner", slog.String("env", cnfg.Env))
+	log.Debug("debug messages are enabled") // есди в &slog.HandlerOptions{ будет slog.LevelInfo, то log.Debug не будет работать
+}
+
+/*
+ 10. выносим инициализацию логгера из-за того, что
+
+его установка будет зависить от параметра env. Он от него
+зависит потому что на local мы бы хотели видеть логи в виде
+текста в консольке, на dev - json файлики из удаленного сервака,
+которые являт собой характер debug, а на prod - json
+файлики, которые просто имеют функцию инфрмации.
+*/
+func setupLogger(env string) *slog.Logger {
+	var log *slog.Logger
+	switch env {
+	case envLocal:
+		// тут делаем простой текстовый логгер (с параметрами и сам разберешся)
+		log = slog.New(
+			slog.NewTextHandler(
+				os.Stdout,
+				&slog.HandlerOptions{
+					Level: slog.LevelDebug,
+				}),
+		)
+	case envDev:
+		log = slog.New(
+			slog.NewJSONHandler(
+				os.Stdout,
+				&slog.HandlerOptions{
+					Level: slog.LevelDebug,
+				}),
+		)
+	case envProd:
+		log = slog.New(
+			slog.NewJSONHandler(
+				os.Stdout,
+				&slog.HandlerOptions{
+					Level: slog.LevelInfo, // тут уже просто инфо, так как это прод
+				}),
+		)
+	}
+
+	return log
 }
