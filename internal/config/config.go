@@ -25,16 +25,16 @@ type Config struct {
 	не верное для текущего случая (деплоя на рподакшн например) значение из env-default, по этому
 	для конечного проекта можно указать env-required: "true", что бы приложение не запустилось
 	при отсутствии параметра в конфиг файле.*/
-	Env        string `yaml"env" env-required: "true"` // `yaml"env" env-default"local"` - было
-	StorgePath string `yaml"storage_path" env-required: "true"`
-	HTTPServer `yaml"http_server"`
+	Env         string `yaml:"env" env-required:"true"` // `yaml"env" env-default"local"` - было
+	StoragePath string `yaml:"storage_path"`
+	HTTPServer  `yaml:"http_server"`
 }
 
 /* 8) */
 type HTTPServer struct {
-	Address     string        `yaml"address" env-default"localhost:8080"`
-	Timeout     time.Duration `yaml"timeout" env-required: "true"` // можно env-default"10s"
-	IdleTimeout time.Duration `yaml"idle_timeout" env-required: "true"`
+	Address     string        `yaml:"address" env-default:"localhost:8080"`
+	Timeout     time.Duration `yaml:"timeout" env-required:"true"` // можно env-default"10s"
+	IdleTimeout time.Duration `yaml:"idle_timeout" env-required:"true"`
 }
 
 /*

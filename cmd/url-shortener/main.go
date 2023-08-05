@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/logger/sl"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/storage/sqlite"
 	"golang.org/x/exp/slog" // это просто обертка текстовых и json логгеров
 )
 
@@ -53,11 +56,21 @@ func main() {
 	}
 
 	cnfg := config.MustLoad(*ConfigPath)
+	fmt.Println(cnfg)
 
 	// инициализируем логгер (10 - 11)
 	log := setupLogger(cnfg.Env)
 	log.Info("starting url-shortner", slog.String("env", cnfg.Env))
 	log.Debug("debug messages are enabled") // есди в &slog.HandlerOptions{ будет slog.LevelInfo, то log.Debug не будет работать
+
+	// бд (12 - )
+	storage, err := sqlite.NewDatabase(cnfg.StoragePath)
+	if err != nil {
+		log.Error("can not init db", sl.Err(err))
+		os.Exit(1)
+	}
+	log.Info("starting database", slog.String("env", cnfg.Env))
+	_ = storage
 }
 
 /*
