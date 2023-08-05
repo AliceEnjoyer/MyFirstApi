@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/AliceEnjoyer/MyFirstApi/internal/storage"
+	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -12,7 +14,7 @@ type Storage struct {
 }
 
 func NewDatabase(storagePath string) (*Storage, error) {
-	const fn = "storage.sqlite.new" // название функции
+	const fn = "storage.sqlite.new" // название функции для возврата ошибок
 
 	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
@@ -44,4 +46,31 @@ func NewDatabase(storagePath string) (*Storage, error) {
 
 	// нужно изучить миграции баз данных
 	// (пригодиться в нормальных проектах)
+}
+
+func (s *Storage) SaveUrl(urlToSave, alias string) (int64, error) {
+	const fn = "storage.sqlite.SaveUrl"
+
+	stmt, err := s.db.Prepare("INSERT INTO url(url, alias) VALUES (?, ?)")
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	res, err := stmt.Exec(urlToSave, alias)
+	if err != nil {
+		// TODO: refactor this
+		// сначало идет преобразование ошибки в ошибку sqlite3, после чего проверяеться
+		// нормально ли преобразовалось и sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return 0, fmt.Errorf("%s: %w", fn, storage.ErrURLExists)
+		}
+		return 0, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return id, nil
 }

@@ -12,7 +12,7 @@ env: "local" # local, dev, prod
 
 # 4) пусть к файлу, в котором будет храниться бд,
 # в нашем случае это sqlite
-storage_path: "./storage/storage.db"
+storage_path: "../../storage/storage.db"
 
 # 5) конфигурируем сервер
 http_server: 
