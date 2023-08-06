@@ -9,6 +9,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// 13)
+
 type Storage struct {
 	db *sql.DB
 }
@@ -73,4 +75,41 @@ func (s *Storage) SaveUrl(urlToSave, alias string) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func (s *Storage) GetUrl(alias string) (string, error) {
+	const fn = "storage.sqlite.GetUrl"
+
+	stmt, err := s.db.Prepare("SELECT url FROM url WHERE alias = ?")
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", fn, err)
+	}
+
+	var res string
+
+	err = stmt.QueryRow(alias).Scan(&res)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("%s: %w", fn, storage.ErrURLNotFound)
+		}
+		return "", fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return res, nil
+}
+
+func (s *Storage) DeleteUrl(alias string) error {
+	const fn = "storage.sqlite.DeleteUrl"
+
+	stmt, err := s.db.Prepare("DELETE FROM url WHERE alias = ?")
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+
+	_, err = stmt.Exec(alias)
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return nil
 }
