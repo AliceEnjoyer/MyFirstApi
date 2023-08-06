@@ -7,8 +7,11 @@ import (
 	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/middleware/logger"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/logger/sl"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/storage/sqlite"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/exp/slog" // это просто обертка текстовых и json логгеров
 )
 
@@ -63,14 +66,38 @@ func main() {
 	log.Info("starting url-shortner", slog.String("env", cnfg.Env))
 	log.Debug("debug messages are enabled") // есди в &slog.HandlerOptions{ будет slog.LevelInfo, то log.Debug не будет работать
 
-	// бд (12 - )
+	// бд (12 - 13)
 	storage, err := sqlite.NewDatabase(cnfg.StoragePath)
 	if err != nil {
 		log.Error("can not init db", sl.Err(err))
 		os.Exit(1)
 	}
-	log.Info("starting database", slog.String("env", cnfg.Env))
 	_ = storage
+
+	/* инициализируем роутер */
+	router := chi.NewRouter()
+
+	/* подключааем к роутеру middleware. Что это такоей?
+	Есть основные хендлеры запросов, типа  добавления или удаления url,
+	а есть серединный хендлер, без которого не будут выполняться основные.
+	К примеру мы хотим добавить ссылку, но middleware нам говорит авторизироваться,
+	иначе мы НЕ ПРОЙДЕМ!!!*/
+
+	router.Use(middleware.RequestID) // этот middleware добавляет к каждому запросу request id,
+	// что бы при ошибке знать на каком request id произошла ошибка.
+
+	router.Use(middleware.RealIP) // этот middleware добавляет к каждому запросу ip пользователя этого сервера
+
+	// подключаем созданый мидлвэйр логгер, который логирует запросы (14)
+	router.Use(logger.New(log))
+
+	// если случаеться какая-то паникавнутри хендлера, то сервер востанавливаеться (в исзходном коде все понятно)
+	router.Use(middleware.Recoverer)
+
+	/* как я понял, оно убирает продолжения (типа json) из
+	пути, созраняя его в контексте (дальше будеи понятно). Пишет
+	красивые url при подкоючении к роутеру*/
+	router.Use(middleware.URLFormat)
 }
 
 /*
