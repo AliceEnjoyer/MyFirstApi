@@ -98,6 +98,8 @@ func main() {
 	пути, созраняя его в контексте (дальше будеи понятно). Пишет
 	красивые url при подкоючении к роутеру*/
 	router.Use(middleware.URLFormat)
+
+	// 15: http-server.handlers.url.save
 }
 
 /*

@@ -9,7 +9,9 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
+	github.com/ajg/form v1.5.1 // indirect
 	github.com/go-chi/chi/v5 v5.0.10 // indirect
+	github.com/go-chi/render v1.0.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

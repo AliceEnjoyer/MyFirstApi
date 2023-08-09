@@ -5,7 +5,7 @@ import "golang.org/x/exp/slog"
 // это вспомагательные поюшки для slog
 
 // эта функция нужна просто из-за того, что в slog нет
-// удобного огирования ошибок
+// удобного логирования ошибок
 func Err(err error) slog.Attr {
 	return slog.Attr{
 		Key:   "error",
