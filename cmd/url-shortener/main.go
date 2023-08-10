@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/url/save"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/middleware/logger"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/logger/sl"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/storage/sqlite"
@@ -99,7 +101,26 @@ func main() {
 	красивые url при подкоючении к роутеру*/
 	router.Use(middleware.URLFormat)
 
+	// подключаем хендлер, который обрабатывает ссылки для сокращения
 	// 15: http-server.handlers.url.save
+	router.Post("/", save.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cnfg.Address))
+
+	// создаем сам сервер
+	srv := &http.Server{
+		Addr:         cnfg.Address,
+		Handler:      router,
+		ReadTimeout:  cnfg.HTTPServer.Timeout,
+		WriteTimeout: cnfg.HTTPServer.Timeout,
+		IdleTimeout:  cnfg.HTTPServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server", sl.Err(err))
+	}
+
+	log.Error("server stoped")
 }
 
 /*

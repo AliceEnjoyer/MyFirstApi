@@ -113,3 +113,13 @@ func (s *Storage) DeleteUrl(alias string) error {
 
 	return nil
 }
+
+func (s *Storage) IfExists(alias string) (bool, error) {
+	q := `SELECT COUNT(*) FROM url WHERE alias = ?`
+	var res int
+
+	if err := s.db.QueryRow(q, alias).Scan(&res); err != nil {
+		return false, fmt.Errorf("can not check if user exists: %s", err.Error())
+	}
+	return res > 0, nil
+}

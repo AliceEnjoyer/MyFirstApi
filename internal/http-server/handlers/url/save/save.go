@@ -2,13 +2,17 @@ package save
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
 	resp "github.com/AliceEnjoyer/MyFirstApi/internal/lib/api/response"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/logger/sl"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/random"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/storage"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render" // The render package helps manage HTTP request / response payloads.
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slog"
 )
 
@@ -35,6 +39,9 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 json объект, который описывает url, который нужно сохранить)"
 */
 type Request struct {
+	/* validate будет давать инфу пакету github.com/go-playground/validator/v10,
+	он говорит о том, что  это обязательное поле, то есть если этого поля нет,
+	то получим при валидации ошибку.*/
 	URL   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias,omitempty"` // omitempty - это просто опциональное поле в json файлике
 }
@@ -57,7 +64,10 @@ type Response struct {
 */
 type URLSaver interface {
 	SaveUrl(urlToSave, alias string) (int64, error)
+	IfExists(alias string) (bool, error)
 }
+
+const aliasLength = 6 // длинна псевдонимов для сокращений
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +79,10 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		)
 
 		var req Request
+
+		fmt.Println("\n\n")
+		fmt.Println(r.Body)
+		fmt.Println("\n\n")
 
 		/*
 			r.Body - это сам json файл
@@ -86,15 +100,62 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
 
-			render.JSON(w, r, resp.Error("failed to decode request"))
+			render.JSON(w, r, resp.Error("failed to decode request")) // возвращает ответ серверу (клиенту)
 
 			return
 		}
-		/*
+		log.Info("request body decoded", slog.Any("request", req))
 
-			я закончил тута(скопировал хуйню с 77ой строки потому что и так понятно)!!!!
-			1:16:35!!!
+		// делаем валидацию запроса
+		if err := validator.New().Struct(req); err != nil {
+			log.Error("request failed validation", sl.Err(err))
 
-		*/
+			render.JSON(w, r, resp.Error("request failed validation"))
+
+			return
+		}
+
+		alias := req.Alias
+
+		if alias == "" {
+			for {
+				alias = random.NewRandomAlias(aliasLength)
+				check, err := urlSaver.IfExists(alias)
+				if err != nil {
+					log.Error("cannot check if alias exsts", slog.String("url", req.URL))
+
+					render.JSON(w, r, resp.Error("cannot check if alias exsts"))
+
+					return
+				}
+				if !check {
+					break
+				}
+			}
+
+		}
+
+		id, err := urlSaver.SaveUrl(req.URL, alias)
+		if errors.Is(err, storage.ErrURLExists) {
+			log.Info("url already exists", slog.String("url", req.URL))
+
+			render.JSON(w, r, resp.Error("url already exists"))
+
+			return
+		}
+		if err != nil {
+			log.Error("failed to add url", sl.Err(err))
+
+			render.JSON(w, r, resp.Error("failed to add url"))
+
+			return
+		}
+
+		log.Info("url added", slog.Int64("id", id))
+
+		render.JSON(w, r, Response{
+			Response: resp.Ok(),
+			Alias:    alias,
+		})
 	}
 }
