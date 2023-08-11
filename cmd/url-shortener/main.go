@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/rediect"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/url/save"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/middleware/logger"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/lib/logger/sl"
@@ -104,6 +105,9 @@ func main() {
 	// подключаем хендлер, который обрабатывает ссылки для сокращения
 	// 15: http-server.handlers.url.save
 	router.Post("/", save.New(log, storage))
+
+	// подключаем наш хендлер редиект
+	router.Get("/{alias}", rediect.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cnfg.Address))
 

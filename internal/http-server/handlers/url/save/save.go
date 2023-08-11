@@ -2,7 +2,6 @@ package save
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -79,10 +78,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		)
 
 		var req Request
-
-		fmt.Println("\n\n")
-		fmt.Println(r.Body)
-		fmt.Println("\n\n")
 
 		/*
 			r.Body - это сам json файл
