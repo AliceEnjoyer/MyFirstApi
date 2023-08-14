@@ -6,10 +6,10 @@ import (
 )
 
 func NewRandomAlias(aliasLength int) string {
-	res := make([]byte, aliasLength)
+	var res []byte
 	arr := `QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm[]{};'",.<>/\?!@#$%^&*()_+-=1234567890~`
 	for i := 0; i < aliasLength; i++ {
-		res = append(res, arr[rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(int32(len(arr)))])
+		res = append(res, arr[rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(int32(len(arr)-1))])
 	}
 	return string(res)
 }

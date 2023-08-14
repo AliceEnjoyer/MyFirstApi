@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/AliceEnjoyer/MyFirstApi/internal/config"
+	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/delete"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/rediect"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/handlers/url/save"
 	"github.com/AliceEnjoyer/MyFirstApi/internal/http-server/middleware/logger"
@@ -108,6 +109,8 @@ func main() {
 
 	// подключаем наш хендлер редиект
 	router.Get("/{alias}", rediect.New(log, storage))
+
+	router.Delete("/", delete.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cnfg.Address))
 

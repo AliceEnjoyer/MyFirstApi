@@ -11,7 +11,6 @@ import (
 	"github.com/AliceEnjoyer/MyFirstApi/internal/storage"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render" // The render package helps manage HTTP request / response payloads.
-	"github.com/go-playground/validator/v10"
 	"golang.org/x/exp/slog"
 )
 
@@ -102,8 +101,8 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		log.Info("request body decoded", slog.Any("request", req))
 
 		// делаем валидацию запроса
-		if err := validator.New().Struct(req); err != nil {
-			log.Error("request failed validation", sl.Err(err))
+		if len(req.URL) == 0 {
+			log.Error("request failed validation")
 
 			render.JSON(w, r, resp.Error("request failed validation"))
 
