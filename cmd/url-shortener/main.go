@@ -103,14 +103,27 @@ func main() {
 	красивые url при подкоючении к роутеру*/
 	router.Use(middleware.URLFormat)
 
+	// делаем авторизацию 16
+	/* для того, что бі создать авторизацию нужно внутри
+	первого роутера создать другой роутер*/
+	router.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shorter", map[string]string{
+			cnfg.HTTPServer.User: cnfg.HTTPServer.Password,
+		}))
+
+		/* мы перенесли сюда этот хендлер что бы
+		ним можно было пользоавться только с авторизацией
+		(тут путь /, а не /url так как в роутере r уже есть /url) */
+		r.Post("/", save.New(log, storage))
+		r.Delete("/{alias}", delete.New(log, storage))
+	})
+
 	// подключаем хендлер, который обрабатывает ссылки для сокращения
 	// 15: http-server.handlers.url.save
-	router.Post("/", save.New(log, storage))
+	//router.Post("/url", save.New(log, storage))
 
 	// подключаем наш хендлер редиект
 	router.Get("/{alias}", rediect.New(log, storage))
-
-	router.Delete("/", delete.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cnfg.Address))
 
